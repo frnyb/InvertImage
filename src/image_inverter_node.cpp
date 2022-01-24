@@ -20,6 +20,32 @@ InvertImageNode::InvertImageNode() : Node("image_inverter")
     publisher_ = this->create_publisher<sensor_msgs::msg::Image>(
             "/inverted_image", video_qos);
 
+    int success = XInvert_image_Initialize(&x_inv_img_, "invert_image");
+
+	if (success == XST_DEVICE_NOT_FOUND)
+	{
+		RCLCPP_FATAL(this->get_logger(), "Device invert_image not found");
+		
+        rclcpp::shutdown();
+	}
+
+	if (success == XST_OPEN_DEVICE_FAILED)
+	{
+		RCLCPP_FATAL(this->get_logger(), "Open device invert_image failed");
+		
+        rclcpp::shutdown();
+	}
+
+    if (success != XST_SUCCESS)
+    {
+        RCLCPP_FATAL(this->get_logger(), "Component invert_image initialization failed ");
+    
+        rclcpp::shutdown();
+    }        
+    
+    RCLCPP_INFO(this->get_logger(), "Component invert_image initialization successful");
+
+
 
 }
 
@@ -29,9 +55,30 @@ void InvertImageNode::imageRecvCallback(const sensor_msgs::msg::Image::SharedPtr
 
     cv_bridge::CvImagePtr cv_ptr = cv_bridge::toCvCopy(msg, msg->encoding);
 
-    int status = invertImage(cv_ptr->image);
+    cv::Mat img_grey;
+    cv::cvtColor(cv_ptr->image, img_grey, CV_BGR2GRAY);
 
-    //InvertImageNode::publishInvertedImage(msg);
+    cv::Mat img_grey_out;
+
+    int status = invertImage(img_grey, &img_grey_out);
+
+    if (!status)
+    {
+        RCLCPP_ERROR(this->get_logger(), "Failed inverting image");
+
+        return;
+    }
+
+    RCLCPP_INFO(this->get_logger(), "Inverted image");
+
+    cv_bridge::CvImagePtr cv_ptr_out;
+    cv_ptr_out->image = img_grey_out;
+
+    sensor_msgs::msg::Image::SharedPtr msg_out = cv_ptr_out->toImageMsg();
+
+    RCLCPP_INFO(this->get_logger(), "Publishing inverted msg");
+
+    InvertImageNode::publishInvertedImage(msg_out);
 }
 
 void InvertImageNode::publishInvertedImage(const sensor_msgs::msg::Image::SharedPtr msg)
@@ -40,177 +87,84 @@ void InvertImageNode::publishInvertedImage(const sensor_msgs::msg::Image::Shared
     publisher_->publish(*msg);
 }
 
-int InvertImageNode::invertImage(const cv::Mat image_bgr)
+int InvertImageNode::invertImage(const cv::Mat img_grey, cv::Mat *ptr_inv_img_grey)
 {
     RCLCPP_INFO(this->get_logger(), "Calling invert_image");
 
-    cv::Mat greyMat;
-    cv::cvtColor(image_bgr, greyMat, CV_BGR2GRAY);
-
-    std::vector<uint8_t> img_vec;
-
-    if(greyMat.isContinuous())
+    if (img_grey.total() != SIZE)
     {
-        img_vec.assign(greyMat.data, greyMat.data + greyMat.total());
+        RCLCPP_INFO(this->get_logger(), "Expected image of size %d, got size %d, aborting", SIZE, img_grey.total());
 
-        RCLCPP_INFO(this->get_logger(), "Image is continuous lalal!!");
+        return 0;
     }
-    else
-    {
-        RCLCPP_INFO(this->get_logger(), "Image is discont!!");
 
+    std::vector<uint8_t> img_vec_in;
+
+    img_vec_in.assign(img_grey.data, img_grey.data + img_grey.total());
+
+    std::vector<uint8_t> img_vec_out(SIZE);
+
+    int success = callIP(&img_vec_in[0], &img_vec_out[0]);
+
+    if (!success)
+    {
+        RCLCPP_INFO(this->get_logger(), "Unsuccessful call to IP");
+
+        return 0;
+    }
+
+    RCLCPP_INFO(this->get_logger(), "Successful call to IP");
+
+    *ptr_inv_img_grey = cv::Mat(cv::Size(IMAGE_Y,IMAGE_X), CV_8UC1, img_vec_out.data());
+
+    return 1;
+}
+
+int InvertImageNode::callIP(const uint8_t *ptr_img_data_in, const uint8_t *ptr_img_data_out)
+{
+    int success;
+
+    RCLCPP_INFO(this->get_logger(), "Polling for invert_image IP ready");
+
+    while(!XInvert_image_IsReady(&x_inv_img_));
+
+    success = XInvert_image_Write_image_in_Bytes(&x_inv_img_, 0, (char *)ptr_img_data_in, SIZE);
+
+    if(success == XST_SUCCESS)
+    {
+        RCLCPP_INFO(this->get_logger(), "Wrote data to invert_image IP");
+    } else
+    {
+        RCLCPP_ERROR(this->get_logger(), "Could not write data to invert_image IP");
+        
+        return 0;
+    }
+
+    RCLCPP_INFO(this->get_logger(), "Polling for invert_image IP idle");
+
+    while(!XInvert_image_IsIdle(&x_inv_img_));
+
+    RCLCPP_INFO(this->get_logger(), "Starting invert_image IP");
+
+    XInvert_image_Start(&x_inv_img_);
+
+    RCLCPP_INFO(this->get_logger(), "Started invert_image IP, polling for IP done");
+
+    while(!XInvert_image_IsDone(&x_inv_img_));
+
+    RCLCPP_INFO(this->get_logger(), "Reading data form invert_image IP");
+
+    success = XInvert_image_Read_image_out_Bytes(&x_inv_img_, 0, (char *)ptr_img_data_out, SIZE);
+
+    if(success == XST_SUCCESS)
+    {
+        RCLCPP_INFO(this->get_logger(), "Read data from invert_image IP");
+    } else
+    {
+        RCLCPP_ERROR(this->get_logger(), "Could not read data from invert_image IP");
+        
         return 0;
     }
 
     return 1;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//int main(int argc, char * argv[])
-//{
-//    rclcpp::init(argc, argv);
-//
-//
-//
-//        int success;
-//
-//        uint32_t reply;
-//
-//        std::cout << "Initializing invert_image component...\n\r";
-//
-//        success = XInvert_image_Initialize(&x_ii, "invert_image");
-//
-//	if (success == XST_DEVICE_NOT_FOUND)
-//	{
-//		std::cout << "Device not found\n\r";
-//		while(1);
-//	}
-//
-//	if (success == XST_OPEN_DEVICE_FAILED)
-//	{
-//		std::cout << "Open device failed\n\r";
-//		while(1);
-//	}
-//
-//        if (success != XST_SUCCESS)
-//        {
-//            std::cout << "Component initialization failed!\n\r";
-//            while (1);
-//        } else
-//        {
-//            std::cout << "Component initialization successful!\n\r";
-//        }
-//
-//        std::cout << "Creating test data\n\r";
-//
-//        uint8_t *data_send = (uint8_t *)malloc(SIZE);
-//
-//        if (data_send == NULL)
-//        {
-//            std::cout << "Failed allocating memory!\n\r";
-//            while(1);
-//        }
-//
-//        uint8_t counter = 1;
-//        for (int i = 0; i < SIZE; i++)
-//        {
-//            data_send[i] = counter++;
-//        }
-//
-//        std::cout << "Finished initializing data.\n\r";
-//
-//        std::cout << "First 5 entries of data:\n\r";
-//        std::cout << (int)data_send[0]
-//            << "\t" << (int)data_send[1]
-//            << "\t" << (int)data_send[2]
-//            << "\t" << (int)data_send[3]
-//            << "\t" << (int)data_send[4]
-//            << std::endl;
-//
-//        std::cout << "Last 5 entries of data:\n\r";
-//        std::cout << (int)data_send[SIZE-1]
-//            << "\t" << (int)data_send[SIZE-2]
-//            << "\t" << (int)data_send[SIZE-3]
-//            << "\t" << (int)data_send[SIZE-4]
-//            << "\t" << (int)data_send[SIZE-5]
-//            << std::endl;
-//
-//        std::cout << "Polling for invert_image ready...\n\r";
-//
-//        while(!XInvert_image_IsReady(&x_ii));
-//
-//        std::cout << "Invert image is ready.\n\r";
-//
-//        std::cout << "Writing image_in...\n\r";
-//
-//    while(true)
-//    {
-//        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-//
-//        reply = XInvert_image_Write_image_in_Bytes(&x_ii, 0, (char *)data_send, SIZE);
-//
-//        std::cout << "Wrote %u bytes of data.\n\r", reply;
-//
-//        while(!XInvert_image_IsIdle(&x_ii));
-//
-//        std::cout << "Starting core...\n\r";
-//
-//        XInvert_image_Start(&x_ii);
-//
-//        std::cout << "Finished starting core.\n\r";
-//
-//        std::cout << "Polling for finish...\n\r";
-//
-//        while(!XInvert_image_IsDone(&x_ii));
-//
-//        std::cout << "Invert image is done!\n\r";
-//
-//        std::cout << "Reading image out data...\n\r";
-//
-//        uint8_t *image_out_ptr = (uint8_t *)malloc(SIZE);
-//
-//        if (image_out_ptr == NULL)
-//        {
-//            std::cout << "Failed allocating memory!\n\r";
-//            while(1);
-//        }
-//
-//        reply = XInvert_image_Read_image_out_Bytes(&x_ii, 0, (char *)image_out_ptr, SIZE);
-//
-//        std::cout << "Read %u bytes of data.\n\r", reply;
-//
-//        std::cout << "First 5 entries of data:\n\r";
-//        std::cout << (int)image_out_ptr[0]
-//            << "\t" << (int)image_out_ptr[1]
-//            << "\t" << (int)image_out_ptr[2]
-//            << "\t" << (int)image_out_ptr[3]
-//            << "\t" << (int)image_out_ptr[4]
-//            << std::endl;
-//
-//        std::cout << "Last 5 entries of data:\n\r";
-//        std::cout << (int)image_out_ptr[SIZE-1]
-//            << "\t" << (int)image_out_ptr[SIZE-2]
-//            << "\t" << (int)image_out_ptr[SIZE-3]
-//            << "\t" << (int)image_out_ptr[SIZE-4]
-//            << "\t" << (int)image_out_ptr[SIZE-5]
-//            << std::endl;
-//
-//    }
-//}
-
-
