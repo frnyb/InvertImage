@@ -11,7 +11,7 @@ InvertImageNode::InvertImageNode() : Node("image_inverter")
 {
     rclcpp::QoS video_qos(10);
     video_qos.keep_last(10);
-    video_qos.best_effort();
+    video_qos.reliable();
     video_qos.durability_volatile();
 
     subscriber_ = this->create_subscription<sensor_msgs::msg::Image>(
