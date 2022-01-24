@@ -54,6 +54,7 @@ int InvertImageNode::invertImage(const cv::Mat image_bgr)
         img_vec.assign(greyMat.data, greyMat.data + greyMat.total());
 
         RCLCPP_INFO(this->get_logger(), "Image is continuous lalal!!");
+    }
     else
     {
         RCLCPP_INFO(this->get_logger(), "Image is discont!!");
