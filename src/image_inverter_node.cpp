@@ -27,9 +27,11 @@ void InvertImageNode::imageRecvCallback(const sensor_msgs::msg::Image::SharedPtr
 {
     RCLCPP_INFO(this->get_logger(), "Image received");
 
-    //int status = invertImage(msg);
+    cv_bridge::CvImagePtr cv_ptr = cv_bridge::toCvCopy(msg, msg->encoding);
 
-    InvertImageNode::publishInvertedImage(msg);
+    int status = invertImage(cv_ptr->image);
+
+    //InvertImageNode::publishInvertedImage(msg);
 }
 
 void InvertImageNode::publishInvertedImage(const sensor_msgs::msg::Image::SharedPtr msg)
@@ -38,9 +40,25 @@ void InvertImageNode::publishInvertedImage(const sensor_msgs::msg::Image::Shared
     publisher_->publish(*msg);
 }
 
-int InvertImageNode::invertImage(const sensor_msgs::msg::Image::SharedPtr msg)
+int InvertImageNode::invertImage(const cv::Mat image_bgr)
 {
     RCLCPP_INFO(this->get_logger(), "Calling invert_image");
+
+    cv::Mat greyMat;
+    cv::cvtColor(image_bgr, greyMat, CV_BGR2GRAY);
+
+    std::vector<uint8_t> img_vec;
+
+    if(greyMat.isContinuous())
+    {
+        img_vec.assign(greyMat.data, greyMat.data + greyMat.total());
+    }
+    else
+    {
+        std::cout << "Image is discont!!" << std::endl;
+
+        return 0;
+    }
 
     return 1;
 }

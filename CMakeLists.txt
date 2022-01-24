@@ -13,6 +13,8 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
+find_package(OpenCV REQUIRED)
+find_package(cv_bridge)
 
 include_directories(include/InvertImageIP/ImageInverter/drivers/invert_image_v1_0/src)
 link_directories (include/InvertImageIP/ImageInverter/drivers/invert_image_v1_0/src)    
@@ -23,7 +25,12 @@ add_executable(image_inverter
     include/InvertImageIP/ImageInverter/drivers/invert_image_v1_0/src/xinvert_image.c
     include/InvertImageIP/ImageInverter/drivers/invert_image_v1_0/src/xinvert_image_linux.c
     )
-ament_target_dependencies(image_inverter rclcpp sensor_msgs)
+ament_target_dependencies(image_inverter 
+    rclcpp 
+    sensor_msgs
+    OpenCV
+    cv_bridge
+)
 
 install(TARGETS
     image_inverter
