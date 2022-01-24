@@ -15,7 +15,9 @@ def generate_launch_description():
             executable="usb_cam_node_exe",
             name="usb_cam",
             namespace="usb_cam",
-            parameters=[usb_cam_config]
+            parameters=[{
+                'params-file': usb_cam_config
+            }]
     )
 
     image_inverter = Node(
