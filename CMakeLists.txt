@@ -12,19 +12,30 @@ endif()
 
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(sensor_msgs REQUIRED)
 
 include_directories(include/InvertImageIP/ImageInverter/drivers/invert_image_v1_0/src)
 link_directories (include/InvertImageIP/ImageInverter/drivers/invert_image_v1_0/src)    
 
 add_executable(image_inverter 
-    src/image_inverter.cpp
+    src/image_inverter_main.cpp
+    src/image_inverter_node.cpp
     include/InvertImageIP/ImageInverter/drivers/invert_image_v1_0/src/xinvert_image.c
     include/InvertImageIP/ImageInverter/drivers/invert_image_v1_0/src/xinvert_image_linux.c
     )
-ament_target_dependencies(image_inverter rclcpp)
+ament_target_dependencies(image_inverter rclcpp sensor_msgs)
 
 install(TARGETS
     image_inverter
-    DESTINATION lib/${PROJECT_NAME})
+    DESTINATION lib/${PROJECT_NAME}
+)
+install(DIRECTORY
+    launch
+    DESTINATION share/${PROJECT_NAME}
+)
+install(DIRECTORY
+    config
+    DESTINATION share/${PROJECT_NAME}
+)
 
 ament_package()
