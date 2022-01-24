@@ -1,9 +1,9 @@
 /usb_cam/image_raw:
     reliability: reliable
     durability: volatile
-    history: 10
+    depth: 10
 
 /inverted_image:
     reliability: reliable
     durability: volatile
-    history: 10
+    depth: 10
