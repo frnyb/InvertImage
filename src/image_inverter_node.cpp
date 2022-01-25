@@ -1,5 +1,5 @@
 /*****************************************************************************/
-// Inlcudes
+// Includes
 /*****************************************************************************/
 
 #include "image_inverter_node.h"
@@ -8,7 +8,8 @@
 // Implementation
 /*****************************************************************************/
 
-InvertImageNode::InvertImageNode() : Node("image_inverter")
+InvertImageNode::InvertImageNode(const std::string & node_name="image_inverter", const std::string & node_namespace="/") 
+    : Node(node_name, node_namespace)
 {
     rclcpp::QoS video_qos(10);
     video_qos.keep_last(10);
@@ -190,7 +191,15 @@ int InvertImageNode::callIP(const uint8_t *ptr_img_data_in, const uint8_t *ptr_i
 int main(int argc, char *argv[])
 {
     rclcpp::init(argc, argv);
-    rclcpp::spin(std::make_shared<InvertImageNode>());
+
+    rclcpp::executors::SingleThreadedExecutor executor;
+
+    auto node = std::make_shared<InvertImageNode>("invert_image");
+
+    executor.add_node(node);
+
+    executor.spin();
+
     rclcpp::shutdown();
 
     return 0;
