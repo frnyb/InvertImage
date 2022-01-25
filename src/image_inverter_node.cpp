@@ -104,9 +104,9 @@ int InvertImageNode::invertImage(const cv::Mat img_grey, cv::Mat *ptr_inv_img_gr
 
     img_vec_in.assign(img_grey.data, img_grey.data + img_grey.total());
 
-    std::vector<uint8_t> img_vec_out(SIZE);
+    uint8_t img_out_arr[SIZE];
 
-    int success = callIP(&img_vec_in[0], &img_vec_out[0]);
+    int success = callIP(&img_vec_in[0], &img_out_arr[0]);
 
     if (!success)
     {
@@ -117,9 +117,7 @@ int InvertImageNode::invertImage(const cv::Mat img_grey, cv::Mat *ptr_inv_img_gr
 
     RCLCPP_INFO(this->get_logger(), "Successful call to IP");
 
-    uint8_t *img_vec_out_ptr = (uint8_t *)img_vec_out.data();
-
-    *ptr_inv_img_grey = cv::Mat(IMAGE_Y,IMAGE_X, CV_8UC1, &img_vec_out_ptr);
+    *ptr_inv_img_grey = cv::Mat(IMAGE_Y,IMAGE_X, CV_8UC1, &img_out_arr);
 
     return 1;
 }
