@@ -65,7 +65,7 @@ InvertImageNode::~InvertImageNode()
 
 void InvertImageNode::imageRecvCallback(const sensor_msgs::msg::Image::SharedPtr msg)
 {
-    RCLCPP_INFO(this->get_logger(), "Image received");
+    RCLCPP_DEBUG(this->get_logger(), "Image received");
 
     cv_bridge::CvImagePtr cv_ptr = cv_bridge::toCvCopy(msg, msg->encoding);
 
@@ -83,7 +83,7 @@ void InvertImageNode::imageRecvCallback(const sensor_msgs::msg::Image::SharedPtr
         return;
     }
 
-    RCLCPP_INFO(this->get_logger(), "Successfully inverted image");
+    RCLCPP_DEBUG(this->get_logger(), "Successfully inverted image");
 
     cv_bridge::CvImage inv_img_out;
     inv_img_out.header.set__frame_id(msg->header.frame_id);
@@ -106,7 +106,7 @@ void InvertImageNode::imageRecvCallback(const sensor_msgs::msg::Image::SharedPtr
 
 void InvertImageNode::publishInvertedImage(const sensor_msgs::msg::Image inv_img_msg, const sensor_msgs::msg::Image org_img_msg)
 {
-    RCLCPP_INFO(this->get_logger(), "Publishing inverted image");
+    RCLCPP_DEBUG(this->get_logger(), "Publishing inverted image");
 
     inv_img_publisher_->publish(inv_img_msg);
     org_img_publisher_->publish(org_img_msg);
@@ -114,11 +114,11 @@ void InvertImageNode::publishInvertedImage(const sensor_msgs::msg::Image inv_img
 
 int InvertImageNode::invertImage(const cv::Mat img_grey, cv::Mat *ptr_inv_img_grey)
 {
-    RCLCPP_INFO(this->get_logger(), "Calling invert_image");
+    RCLCPP_DEBUG(this->get_logger(), "Calling invert_image");
 
     if (img_grey.total() != SIZE)
     {
-        RCLCPP_INFO(this->get_logger(), "Expected image of size %d, got size %d, aborting", SIZE, img_grey.total());
+        RCLCPP_ERROR(this->get_logger(), "Expected image of size %d, got size %d, aborting", SIZE, img_grey.total());
 
         return 0;
     }
@@ -133,12 +133,12 @@ int InvertImageNode::invertImage(const cv::Mat img_grey, cv::Mat *ptr_inv_img_gr
 
     if (!success)
     {
-        RCLCPP_INFO(this->get_logger(), "Unsuccessful call to IP");
+        RCLCPP_ERROR(this->get_logger(), "Unsuccessful call to IP");
 
         return 0;
     }
 
-    RCLCPP_INFO(this->get_logger(), "Successful call to IP");
+    RCLCPP_DEBUG(this->get_logger(), "Successful call to IP");
 
     *ptr_inv_img_grey = cv::Mat(IMAGE_Y,IMAGE_X, CV_8UC1, &img_out_arr);
 
@@ -149,7 +149,7 @@ int InvertImageNode::callIP(const uint8_t *ptr_img_data_in, const uint8_t *ptr_i
 {
     int length;
 
-    RCLCPP_INFO(this->get_logger(), "Polling for invert_image IP ready");
+    RCLCPP_DEBUG(this->get_logger(), "Polling for invert_image IP ready");
 
     while(!XInvert_image_IsReady(&x_inv_img_));
 
@@ -157,7 +157,7 @@ int InvertImageNode::callIP(const uint8_t *ptr_img_data_in, const uint8_t *ptr_i
 
     if(length == SIZE)
     {
-        RCLCPP_INFO(this->get_logger(), "Wrote data to invert_image IP");
+        RCLCPP_DEBUG(this->get_logger(), "Wrote data to invert_image IP");
     } else
     {
         RCLCPP_ERROR(this->get_logger(), "Could not write data to invert_image IP");
@@ -165,25 +165,25 @@ int InvertImageNode::callIP(const uint8_t *ptr_img_data_in, const uint8_t *ptr_i
         return 0;
     }
 
-    RCLCPP_INFO(this->get_logger(), "Polling for invert_image IP idle");
+    RCLCPP_DEBUG(this->get_logger(), "Polling for invert_image IP idle");
 
     while(!XInvert_image_IsIdle(&x_inv_img_));
 
-    RCLCPP_INFO(this->get_logger(), "Starting invert_image IP");
+    RCLCPP_DEBUG(this->get_logger(), "Starting invert_image IP");
 
     XInvert_image_Start(&x_inv_img_);
 
-    RCLCPP_INFO(this->get_logger(), "Started invert_image IP, polling for IP done");
+    RCLCPP_DEBUG(this->get_logger(), "Started invert_image IP, polling for IP done");
 
     while(!XInvert_image_IsDone(&x_inv_img_));
 
-    RCLCPP_INFO(this->get_logger(), "Reading data form invert_image IP");
+    RCLCPP_DEBUG(this->get_logger(), "Reading data form invert_image IP");
 
     length = XInvert_image_Read_image_out_Bytes(&x_inv_img_, 0, (char *)ptr_img_data_out, SIZE);
 
     if(length == SIZE)
     {
-        RCLCPP_INFO(this->get_logger(), "Read data from invert_image IP");
+        RCLCPP_DEBUG(this->get_logger(), "Read data from invert_image IP");
     } else
     {
         RCLCPP_ERROR(this->get_logger(), "Could not read data from invert_image IP");
