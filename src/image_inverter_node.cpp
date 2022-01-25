@@ -75,8 +75,11 @@ void InvertImageNode::imageRecvCallback(const sensor_msgs::msg::Image::SharedPtr
     RCLCPP_INFO(this->get_logger(), "Assigning img_grey_out to cv_ptr_out->image");
 
     cv_img_out.header =  msg->header;
+    RCLCPP_INFO(this->get_logger(), "1");
     cv_img_out.header.set__stamp(rclcpp::Clock().now());
+    RCLCPP_INFO(this->get_logger(), "2");
     cv_img_out.encoding = sensor_msgs::image_encodings::TYPE_8UC1;
+    RCLCPP_INFO(this->get_logger(), "3");
     cv_img_out.image = img_grey_out;
 
     RCLCPP_INFO(this->get_logger(), "Publishing inverted msg");
