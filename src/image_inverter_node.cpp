@@ -8,7 +8,7 @@
 // Implementation
 /*****************************************************************************/
 
-InvertImageNode::InvertImageNode(const std::string & node_name="image_inverter", const std::string & node_namespace="/") 
+InvertImageNode::InvertImageNode(const std::string & node_name, const std::string & node_namespace) 
     : Node(node_name, node_namespace)
 {
     rclcpp::QoS video_qos(10);
