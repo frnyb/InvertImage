@@ -39,6 +39,7 @@ extern "C" {
 class InvertImageNode : public rclcpp::Node
 {
 public:
+    explicit
     InvertImageNode(const std::string & node_name="image_inverter", const std::string & node_namespace="/");
     ~InvertImageNode();
 

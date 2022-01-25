@@ -39,7 +39,8 @@ def generate_launch_description():
         executable="image_storer",
         name="image_storer",
         namespace="image_storer_org",
-        parameters=[img_storer_org_config]
+        parameters=[img_storer_org_config],
+        remappings=[("/image", "/image_inverter/org_image")]
     )
 
     img_storer_inv_config = os.path.join(
@@ -52,7 +53,8 @@ def generate_launch_description():
         executable="image_storer",
         name="image_storer",
         namespace="image_storer_inv",
-        parameters=[img_storer_inv_config]
+        parameters=[img_storer_inv_config],
+        remappings=[("/image", "/image_inverter/inv_image")]
     )
 
     return LaunchDescription([

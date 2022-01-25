@@ -19,11 +19,17 @@ InvertImageNode::InvertImageNode(const std::string & node_name, const std::strin
     subscriber_ = this->create_subscription<sensor_msgs::msg::Image>(
             "/image", video_qos, std::bind(&InvertImageNode::imageRecvCallback, this, std::placeholders::_1));
 
+    char inv_img_topic[100];
+    sprintf(inv_img_topic, "%s/inv_image", this->get_namespace());
+
     inv_img_publisher_ = this->create_publisher<sensor_msgs::msg::Image>(
-            "/inv_image", video_qos);
+            inv_img_topic, video_qos);
+
+    char org_img_topic[100];
+    sprintf(org_img_topic, "%s/org_image", this->get_namespace());
 
     org_img_publisher_ = this->create_publisher<sensor_msgs::msg::Image>(
-            "/org_image", video_qos);
+            org_img_topic, video_qos);
 
     int success = XInvert_image_Initialize(&x_inv_img_, "invert_image");
 
@@ -194,7 +200,7 @@ int main(int argc, char *argv[])
 
     rclcpp::executors::SingleThreadedExecutor executor;
 
-    auto node = std::make_shared<InvertImageNode>("invert_image");
+    auto node = std::make_shared<InvertImageNode>();
 
     executor.add_node(node);
 
