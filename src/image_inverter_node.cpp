@@ -7,6 +7,7 @@
 /*****************************************************************************/
 // Implementation
 /*****************************************************************************/
+
 InvertImageNode::InvertImageNode() : Node("image_inverter")
 {
     rclcpp::QoS video_qos(10);
@@ -48,6 +49,11 @@ InvertImageNode::InvertImageNode() : Node("image_inverter")
     else{
         RCLCPP_INFO(this->get_logger(), "Component invert_image initialization successful");
     }
+}
+
+InvertImageNode::~InvertImageNode()
+{
+    XInvert_image_Release(&x_inv_img_);
 }
 
 void InvertImageNode::imageRecvCallback(const sensor_msgs::msg::Image::SharedPtr msg)
@@ -179,4 +185,13 @@ int InvertImageNode::callIP(const uint8_t *ptr_img_data_in, const uint8_t *ptr_i
     }
 
     return 1;
+}
+
+int main(int argc, char *argv[])
+{
+    rclcpp::init(argc, argv);
+    rclcpp::spin(std::make_shared<InvertImageNode>());
+    rclcpp::shutdown();
+
+    return 0;
 }

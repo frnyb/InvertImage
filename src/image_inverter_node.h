@@ -2,7 +2,7 @@
 #define IMAGE_INVERTER_H
 
 /*****************************************************************************/
-// Inlcudes
+// Includes
 /*****************************************************************************/
 
 #include <string>
@@ -40,6 +40,7 @@ class InvertImageNode : public rclcpp::Node
 {
 public:
     InvertImageNode();
+    ~InvertImageNode();
 
 private:
     rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr subscriber_;
@@ -57,3 +58,8 @@ private:
 
 #endif
 
+/*****************************************************************************/
+// Main
+/*****************************************************************************/
+
+int main(int argc, char *argv[]);
