@@ -1,1 +1,3 @@
-store_dir: "~/image_storer/org_imgs"
+/**:
+    ros__parameters:
+        store_dir: "~/image_storer/org_imgs"

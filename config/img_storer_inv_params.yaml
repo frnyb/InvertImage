@@ -1,1 +1,3 @@
-store_dir: "~/image_storer/inv_imgs"
+/**:
+    ros__parameters:
+        store_dir: "~/image_storer/inv_imgs"
