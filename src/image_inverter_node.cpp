@@ -76,7 +76,10 @@ void InvertImageNode::imageRecvCallback(const sensor_msgs::msg::Image::SharedPtr
     cv_img_out.encoding = sensor_msgs::image_encodings::TYPE_8UC1;
     cv_img_out.image = img_grey_out;
 
-    publishInvertedImage(cv_img_out.toImageMsg());
+    const sensor_msgs::msg::Image::SharedPtr msg_out = cv_img_out.toImageMsg();
+    RCLCPP_INFO(this->get_logger(), "123");
+    
+    publishInvertedImage(msg_out);
 }
 
 void InvertImageNode::publishInvertedImage(const sensor_msgs::msg::Image::SharedPtr msg)
