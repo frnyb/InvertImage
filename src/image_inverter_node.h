@@ -47,7 +47,7 @@ private:
     XInvert_image x_inv_img_;
 
     void imageRecvCallback(const sensor_msgs::msg::Image::SharedPtr msg);
-    void publishInvertedImage(const sensor_msgs::msg::Image::SharedPtr msg);
+    void publishInvertedImage(const sensor_msgs::msg::Image msg);
 
     int invertImage(const cv::Mat img_grey, cv::Mat *ptr_inv_img_grey);
     int callIP(const uint8_t *ptr_img_data_in, const uint8_t *ptr_img_data_out);
