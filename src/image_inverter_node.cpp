@@ -76,15 +76,11 @@ void InvertImageNode::imageRecvCallback(const sensor_msgs::msg::Image::SharedPtr
     cv_img_out.encoding = sensor_msgs::image_encodings::TYPE_8UC1;
     cv_img_out.image = img_grey_out;
 
-    RCLCPP_INFO(this->get_logger(), "123");
-
-    sensor_msgs::msg::Image msg_out;
-    cv_img_out.toImageMsg(msg_out);
-
-    RCLCPP_INFO(this->get_logger(), "456");
+    sensor_msgs::msg::Image::SharedPtr msg_out = cv_img_out.toImageMsg();
     
-    publishInvertedImage(msg_out);
+    publishInvertedImage(*msg_out);
 }
+
 
 void InvertImageNode::publishInvertedImage(const sensor_msgs::msg::Image msg)
 {
@@ -121,7 +117,9 @@ int InvertImageNode::invertImage(const cv::Mat img_grey, cv::Mat *ptr_inv_img_gr
 
     RCLCPP_INFO(this->get_logger(), "Successful call to IP");
 
-    *ptr_inv_img_grey = cv::Mat(cv::Size(IMAGE_Y,IMAGE_X), CV_8UC1, img_vec_out.data());
+    uint8_t *img_vec_out_ptr = (uint8_t *)img_vec_out.data();
+
+    *ptr_inv_img_grey = cv::Mat(IMAGE_Y,IMAGE_X, CV_8UC1, &img_vec_out_ptr);
 
     return 1;
 }
