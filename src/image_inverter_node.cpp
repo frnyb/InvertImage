@@ -42,11 +42,9 @@ InvertImageNode::InvertImageNode() : Node("image_inverter")
     
         rclcpp::shutdown();
     }        
-    
-    RCLCPP_INFO(this->get_logger(), "Component invert_image initialization successful");
-
-
-
+    else{
+        RCLCPP_INFO(this->get_logger(), "Component invert_image initialization successful");
+    }
 }
 
 void InvertImageNode::imageRecvCallback(const sensor_msgs::msg::Image::SharedPtr msg)
@@ -128,7 +126,9 @@ int InvertImageNode::callIP(const uint8_t *ptr_img_data_in, const uint8_t *ptr_i
 
     while(!XInvert_image_IsReady(&x_inv_img_));
 
-    success = XInvert_image_Write_image_in_Bytes(&x_inv_img_, 0, (char *)ptr_img_data_in, SIZE);
+    success = XInvert_image_Write_image_in_Bytes(&x_inv_img_, 0, (char *)ptr_img_data_in, 1);
+
+    return 1;
 
     if(success == XST_SUCCESS)
     {
