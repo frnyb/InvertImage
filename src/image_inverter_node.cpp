@@ -17,8 +17,11 @@ InvertImageNode::InvertImageNode() : Node("image_inverter")
     subscriber_ = this->create_subscription<sensor_msgs::msg::Image>(
             "/image", video_qos, std::bind(&InvertImageNode::imageRecvCallback, this, std::placeholders::_1));
 
-    publisher_ = this->create_publisher<sensor_msgs::msg::Image>(
-            "/inverted_image", video_qos);
+    inv_img_publisher_ = this->create_publisher<sensor_msgs::msg::Image>(
+            "/inv_image", video_qos);
+
+    org_img_publisher_ = this->create_publisher<sensor_msgs::msg::Image>(
+            "/org_image", video_qos);
 
     int success = XInvert_image_Initialize(&x_inv_img_, "invert_image");
 
@@ -69,24 +72,31 @@ void InvertImageNode::imageRecvCallback(const sensor_msgs::msg::Image::SharedPtr
 
     RCLCPP_INFO(this->get_logger(), "Successfully inverted image");
 
-    cv_bridge::CvImage cv_img_out;
+    cv_bridge::CvImage inv_img_out;
+    inv_img_out.header.set__frame_id(msg->header.frame_id);
+    inv_img_out.header.set__stamp(rclcpp::Clock().now());
+    inv_img_out.encoding = sensor_msgs::image_encodings::TYPE_8UC1;
+    inv_img_out.image = img_grey_out;
 
-    cv_img_out.header.set__frame_id(msg->header.frame_id);
-    cv_img_out.header.set__stamp(rclcpp::Clock().now());
-    cv_img_out.encoding = sensor_msgs::image_encodings::TYPE_8UC1;
-    cv_img_out.image = img_grey_out;
+    cv_bridge::CvImage org_img_out;
+    org_img_out.header.set__frame_id(msg->header.frame_id);
+    org_img_out.header.set__stamp(rclcpp::Clock().now());
+    org_img_out.encoding = sensor_msgs::image_encodings::TYPE_8UC1;
+    org_img_out.image = img_grey;
 
-    sensor_msgs::msg::Image::SharedPtr msg_out = cv_img_out.toImageMsg();
+    sensor_msgs::msg::Image::SharedPtr inv_msg_out = inv_img_out.toImageMsg();
+    sensor_msgs::msg::Image::SharedPtr org_msg_out = org_img_out.toImageMsg();
     
-    publishInvertedImage(*msg_out);
+    publishInvertedImage(*inv_msg_out, *org_msg_out);
 }
 
 
-void InvertImageNode::publishInvertedImage(const sensor_msgs::msg::Image msg)
+void InvertImageNode::publishInvertedImage(const sensor_msgs::msg::Image inv_img_msg, const sensor_msgs::msg::Image org_img_msg)
 {
     RCLCPP_INFO(this->get_logger(), "Publishing inverted image");
 
-    publisher_->publish(msg);
+    inv_img_publisher_->publish(inv_img_msg);
+    org_img_publisher_->publish(org_img_msg);
 }
 
 int InvertImageNode::invertImage(const cv::Mat img_grey, cv::Mat *ptr_inv_img_grey)
