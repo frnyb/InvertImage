@@ -120,17 +120,15 @@ int InvertImageNode::invertImage(const cv::Mat img_grey, cv::Mat *ptr_inv_img_gr
 
 int InvertImageNode::callIP(const uint8_t *ptr_img_data_in, const uint8_t *ptr_img_data_out)
 {
-    int success;
+    int length;
 
     RCLCPP_INFO(this->get_logger(), "Polling for invert_image IP ready");
 
     while(!XInvert_image_IsReady(&x_inv_img_));
 
-    success = XInvert_image_Write_image_in_Bytes(&x_inv_img_, 0, (char *)ptr_img_data_in, 1);
+    length = XInvert_image_Write_image_in_Bytes(&x_inv_img_, 0, (char *)ptr_img_data_in, SIZE);
 
-    return 1;
-
-    if(success == XST_SUCCESS)
+    if(length == SIZE)
     {
         RCLCPP_INFO(this->get_logger(), "Wrote data to invert_image IP");
     } else
@@ -154,9 +152,9 @@ int InvertImageNode::callIP(const uint8_t *ptr_img_data_in, const uint8_t *ptr_i
 
     RCLCPP_INFO(this->get_logger(), "Reading data form invert_image IP");
 
-    success = XInvert_image_Read_image_out_Bytes(&x_inv_img_, 0, (char *)ptr_img_data_out, SIZE);
+    length = XInvert_image_Read_image_out_Bytes(&x_inv_img_, 0, (char *)ptr_img_data_out, SIZE);
 
-    if(success == XST_SUCCESS)
+    if(length == SIZE)
     {
         RCLCPP_INFO(this->get_logger(), "Read data from invert_image IP");
     } else
