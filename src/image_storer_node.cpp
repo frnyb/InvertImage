@@ -11,6 +11,8 @@ ImageStorerNode::ImageStorerNode() : Node("image_storer")
     subscriber_ = this->create_subscription<sensor_msgs::msg::Image>(
             "/image", video_qos, std::bind(&ImageStorerNode::imageRecvCallback, this, std::placeholders::_1));
 
+    this->declare_parameter<std::string>("store_dir", "~/image_storer");
+
 	this->get_parameter("store_dir", store_dir_);
 }
 
@@ -18,9 +20,7 @@ void ImageStorerNode::imageRecvCallback(const sensor_msgs::msg::Image::SharedPtr
 {
 	cv_bridge::CvImagePtr cv_ptr = cv_bridge::toCvCopy(msg, msg->encoding);
 
-	char save_path[100];
-
-	sprintf(save_path, "%s/img_%u.png", store_dir_, (int)(rclcpp::Clock().now().nanoseconds()));
+    std::string save_path = store_dir_ + "/img_" + std::to_string((int)rclcpp::Clock().now().nanoseconds()) + ".png";
 
 	cv::imwrite(save_path, cv_ptr->image);
 }

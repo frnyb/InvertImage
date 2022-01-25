@@ -1,3 +1,3 @@
 /**:
     ros__parameters:
-        store_dir: "~/image_storer/inv_imgs"
+        store_dir: "/home/mp4d/image_storer/inv_imgs"
