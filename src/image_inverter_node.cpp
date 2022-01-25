@@ -67,29 +67,22 @@ void InvertImageNode::imageRecvCallback(const sensor_msgs::msg::Image::SharedPtr
         return;
     }
 
-    RCLCPP_INFO(this->get_logger(), "Inverted image");
+    RCLCPP_INFO(this->get_logger(), "Successfully inverted image");
 
-    RCLCPP_INFO(this->get_logger(), "Initing cv ptr out");
     cv_bridge::CvImage cv_img_out;
 
-    RCLCPP_INFO(this->get_logger(), "Assigning img_grey_out to cv_ptr_out->image");
-
-    cv_img_out.header =  msg->header;
-    RCLCPP_INFO(this->get_logger(), "1");
+    cv_img_out.header.set__frame_id(msg->header.frame_id);
     cv_img_out.header.set__stamp(rclcpp::Clock().now());
-    RCLCPP_INFO(this->get_logger(), "2");
     cv_img_out.encoding = sensor_msgs::image_encodings::TYPE_8UC1;
-    RCLCPP_INFO(this->get_logger(), "3");
     cv_img_out.image = img_grey_out;
 
-    RCLCPP_INFO(this->get_logger(), "Publishing inverted msg");
-
-    InvertImageNode::publishInvertedImage(cv_img_out.toImageMsg());
+    publishInvertedImage(cv_img_out.toImageMsg());
 }
 
 void InvertImageNode::publishInvertedImage(const sensor_msgs::msg::Image::SharedPtr msg)
 {
-    RCLCPP_INFO(this->get_logger(), "Publishing image");
+    RCLCPP_INFO(this->get_logger(), "Publishing inverted image");
+
     publisher_->publish(*msg);
 }
 
