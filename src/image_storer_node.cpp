@@ -14,13 +14,15 @@ ImageStorerNode::ImageStorerNode() : Node("image_storer")
     this->declare_parameter<std::string>("store_dir", "~/image_storer");
 
 	this->get_parameter("store_dir", store_dir_);
+
+    counter_ = 0;
 }
 
 void ImageStorerNode::imageRecvCallback(const sensor_msgs::msg::Image::SharedPtr msg)
 {
 	cv_bridge::CvImagePtr cv_ptr = cv_bridge::toCvCopy(msg, msg->encoding);
 
-    std::string save_path = store_dir_ + "/img_" + std::to_string((int)rclcpp::Clock().now().nanoseconds()) + ".png";
+    std::string save_path = store_dir_ + "/img_" + std::to_string(counter_++) + ".png";
 
 	cv::imwrite(save_path, cv_ptr->image);
 }
