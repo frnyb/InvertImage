@@ -35,8 +35,8 @@ public:
 
 private:
     rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr subscriber_;
-
     std::string store_dir_;
+    int counter_ = 0;
 
     void imageRecvCallback(const sensor_msgs::msg::Image::SharedPtr msg);
 };
