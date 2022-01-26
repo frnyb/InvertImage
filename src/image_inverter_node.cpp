@@ -140,7 +140,7 @@ int InvertImageNode::invertImage(const cv::Mat img_grey, cv::Mat *ptr_inv_img_gr
 
     RCLCPP_DEBUG(this->get_logger(), "Successful call to IP");
 
-    *ptr_inv_img_grey = cv::Mat(IMAGE_Y,IMAGE_X, CV_8UC1, &img_out_arr);
+    *ptr_inv_img_grey = cv::Mat(IMAGE_X, IMAGE_Y, CV_8UC1, &img_out_arr);
 
     return 1;
 }
